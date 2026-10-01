@@ -35,7 +35,7 @@ Running with Docker Compose
 Clone the repository:
 
 Bash
-git clone [https://github.com/4thman/notes-app.git](https://github.com/4thman/notes-app.git)
+git clone [[https://github.com/4thman/4thman-dockerised-notes-web-application.git]]
 cd notes-app
 Start the application stack:
 
