@@ -1,0 +1,34 @@
+#version
+version: "3.9"
+
+# Define the services
+services: 
+  app:
+    build: .
+    image: 4thman/notes-app:V1
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: appuser
+      DB_PASSWORD: apppassword
+      DB_NAME: notesdb
+    depends_on:
+      - db
+    restart: unless-stopped
+
+# Define the database service
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppassword
+      POSTGRES_DB: notesdb
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+# Define the volumes
+volumes:
+  db_data:

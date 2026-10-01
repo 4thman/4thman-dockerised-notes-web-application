@@ -1,0 +1,52 @@
+apiVersion: 2021-10-01
+location: eastus
+name: notes-app-group
+properties:
+  containers:
+    - name: app
+      properties:
+        image: 4thman/notes-app:V1
+        command: ["/bin/sh", "-c", "sleep 20 && node server.js"]
+        environmentVariables:
+          - name: DB_HOST
+            value: localhost
+          - name: DB_PORT
+            value: "5432"
+          - name: DB_USER
+            value: appuser
+          - name: DB_PASSWORD
+            secureValue: "Hagital123."
+          - name: DB_NAME
+            value: notesdb
+        ports:
+          - port: 3000
+        resources:
+          requests:
+            cpu: 1.0
+            memoryInGb: 1.0
+    - name: db
+      properties:
+        image: postgres:16-alpine
+        environmentVariables:
+          - name: POSTGRES_USER
+            value: appuser
+          - name: POSTGRES_PASSWORD
+            secureValue: "Hagital123."
+          - name: POSTGRES_DB
+            value: notesdb
+        ports:
+          - port: 5432
+        resources:
+          requests:
+            cpu: 1.0
+            memoryInGb: 1.0
+  osType: Linux
+  ipAddress:
+    type: Public
+    dnsNameLabel: notes-app-dc1998
+    ports:
+      - protocol: tcp
+        port: 3000
+  restartPolicy: Always
+type: Microsoft.ContainerInstance/containerGroups
+

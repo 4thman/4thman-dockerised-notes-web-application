@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notes App</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f5f7;
+    margin: 0;
+    padding: 40px 20px;
+    color: #1a1a1a;
+  }
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 4px;
+  }
+  p.subtitle {
+    color: #666;
+    margin-top: 0;
+    margin-bottom: 24px;
+  }
+  form {
+    background: #fff;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 24px;
+  }
+  input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+  textarea {
+    resize: vertical;
+    min-height: 70px;
+  }
+  button {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #1d4ed8;
+  }
+  .note {
+    background: #fff;
+    padding: 14px 16px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .note h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.1rem;
+  }
+  .note p {
+    margin: 0 0 8px 0;
+    color: #444;
+    white-space: pre-wrap;
+  }
+  .note .meta {
+    font-size: 0.75rem;
+    color: #999;
+  }
+  .note .delete-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    color: #d33;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+  }
+  .note .delete-btn:hover {
+    background: #fee;
+  }
+  .empty-state {
+    text-align: center;
+    color: #999;
+    padding: 30px 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Notes</h1>
+  <p class="subtitle">Backed by PostgreSQL, served from Express</p>
+
+  <form id="note-form">
+    <input type="text" id="title" placeholder="Title" required>
+    <textarea id="content" placeholder="Write something..."></textarea>
+    <button type="submit">Add Note</button>
+  </form>
+
+  <div id="notes-list"></div>
+</div>
+
+<script>
+  const form = document.getElementById('note-form');
+  const titleInput = document.getElementById('title');
+  const contentInput = document.getElementById('content');
+  const notesList = document.getElementById('notes-list');
+
+  async function loadNotes() {
+    const res = await fetch('/api/notes');
+    const notes = await res.json();
+
+    if (notes.length === 0) {
+      notesList.innerHTML = '<div class="empty-state">No notes yet. Add one above.</div>';
+      return;
+    }
+
+    notesList.innerHTML = notes.map(note => `
+      <div class="note" data-id="${note.id}">
+        <button class="delete-btn" data-id="${note.id}">Delete</button>
+        <h3>${escapeHtml(note.title)}</h3>
+        <p>${escapeHtml(note.content || '')}</p>
+        <div class="meta">${new Date(note.created_at).toLocaleString()}</div>
+      </div>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = titleInput.value.trim();
+    const content = contentInput.value.trim();
+    if (!title) return;
+
+    await fetch('/api/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, content })
+    });
+
+    titleInput.value = '';
+    contentInput.value = '';
+    loadNotes();
+  });
+
+  notesList.addEventListener('click', async (e) => {
+    if (e.target.classList.contains('delete-btn')) {
+      const id = e.target.getAttribute('data-id');
+      await fetch(`/api/notes/${id}`, { method: 'DELETE' });
+      loadNotes();
+    }
+  });
+
+  loadNotes();
+</script>
+</body>
+</html>
